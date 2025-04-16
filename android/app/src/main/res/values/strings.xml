@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">QR Code Generator</string>
+    <string name="generate_qr_code">Generate QR Code</string>
+    <string name="export_bitmap">Export as Bitmap</string>
+    <string name="send_to_native">Send to Native Code</string>
+    <string name="go_back">Go Back</string>
+    <string name="qr_code_content">QR Code Content</string>
+    <string name="enter_text">Enter text for QR code</string>
+    <string name="qr_code_output">QR Code Output</string>
+    <string name="bitmap_processor">Bitmap Processor</string>
+    <string name="qr_code_bitmap">QR Code as Bitmap</string>
+    <string name="empty_state_message">Your QR code will appear here</string>
+    <string name="bitmap_ready">Bitmap ready for processing</string>
+    <string name="generate_info">Generate QR Codes with Your Logo</string>
+    <string name="generate_description">Enter text, generate a QR code with your company logo, and export as a bitmap image.</string>
+    <string name="clear_input">Clear input</string>
+    <string name="success_message">QR code generated successfully</string>
+    <string name="error_message">Failed to generate QR code</string>
+    <string name="no_qr_code">No QR code to export</string>
+    <string name="export_success">QR code exported as bitmap</string>
+    
+    <!-- Printer related strings -->
+    <string name="print_to_zebra">Print to Zebra Printer</string>
+    <string name="discover_printers">Discover Printers</string>
+    <string name="select_printer">Select Printer</string>
+    <string name="connect_to_printer">Connect</string>
+    <string name="print">Print</string>
+    <string name="discovering_printers">Discovering printers…</string>
+    <string name="no_printers_found">No printers found</string>
+    <string name="connecting_to_printer">Connecting to printer…</string>
+    <string name="connection_success">Connected to printer</string>
+    <string name="connection_failed">Failed to connect to printer</string>
+    <string name="printing">Printing…</string>
+    <string name="print_success">Print job completed successfully</string>
+    <string name="print_error">Print error</string>
+    <string name="bluetooth_printer">Bluetooth Printer</string>
+    <string name="network_printer">Network Printer</string>
+    <string name="printer_ip_address">Printer IP Address</string>
+    <string name="enter_ip_address">Enter printer IP address</string>
+    <string name="enter_mac_address">Enter Bluetooth MAC address</string>
+    <string name="ip_address_hint">192.168.1.100</string>
+    <string name="mac_address_hint">00:11:22:33:44:55</string>
+    <string name="manual_connection">Manual Connection</string>
+</resources>

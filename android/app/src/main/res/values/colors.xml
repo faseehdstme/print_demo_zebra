@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="primary">#6200EA</color>
+    <color name="primary_dark">#3700B3</color>
+    <color name="primary_light">#BB86FC</color>
+    <color name="accent">#03DAC5</color>
+    <color name="background">#F5F7FA</color>
+    <color name="neutral_100">#F0F2F5</color>
+    <color name="neutral_200">#E4E6EB</color>
+    <color name="neutral_300">#CCD0D5</color>
+    <color name="neutral_400">#4E4B66</color>
+    <color name="neutral_500">#1C1939</color>
+</resources>
