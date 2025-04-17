@@ -197,18 +197,17 @@ public class MainActivity extends FlutterActivity implements DiscoveryHandler {
             }
         }
         ).start();
-
     }
-    void printQrImage(Bitmap bitmap,PrintCallback printCallback){
+    void printQrImage(Bitmap bitmapValue,PrintCallback printCallback){
         new Thread(()->{
             Looper.prepare();
             try{
                 if (!(connection.isConnected())){
                     throw new Exception("Printer not connected");
                 }
-                ZebraImageAndroid zebraImage = new ZebraImageAndroid(bitmap);
+                ZebraImageAndroid zebraImage = new ZebraImageAndroid(bitmapValue);
                 ZebraPrinter printer = ZebraPrinterFactory.getInstance(PrinterLanguage.ZPL, connection);
-                printer.printImage(zebraImage, 0, 0, bitmap.getWidth(), bitmap.getHeight(), false);
+                printer.printImage(zebraImage, 0, 0, bitmapValue.getWidth(), bitmapValue.getHeight(), false);
                 printCallback.onSuccess();
             }
             catch (Exception e){
@@ -246,18 +245,18 @@ public class MainActivity extends FlutterActivity implements DiscoveryHandler {
                     throw new Exception("Printer not connected");
                 }
                 ZebraPrinter printer = ZebraPrinterFactory.getInstance(PrinterLanguage.ZPL, connection);
-//                printer.sendCommand("^XA~TA000~JSN^LT0^MNN^MTD^PON^PMN^LH0,0^JMA^PR3,3~SD10^JUS^LRN^CI0^XZ\n" +
-//                        "^XA\n" +
-//                        "^MMT\n" +
-//                        "^PW623\n" +
-//                        "^LL0240\n" +
-//                        "^LS0\n" +
-//                        "^BY4,3,89^FT610,52^BCI,,Y,N\n" +
-//                        "^FD>;123456789012^FS\n" +
-//                        "^FT317,191^A0I,39,38^FH\\^FD"+text+" ^FS\n" +
-//                        "^FT317,143^A0I,39,38^FH\\^FD          sample print^FS\n" +
-//                        "^PQ1,0,1,Y^XZ");
-                printer.sendCommand(printCode2);
+                printer.sendCommand("^XA~TA000~JSN^LT0^MNN^MTD^PON^PMN^LH0,0^JMA^PR3,3~SD10^JUS^LRN^CI0^XZ\n" +
+                        "^XA\n" +
+                        "^MMT\n" +
+                        "^PW623\n" +
+                        "^LL0240\n" +
+                        "^LS0\n" +
+                        "^BY4,3,89^FT610,52^BCI,,Y,N\n" +
+                        "^FD>;123456789012^FS\n" +
+                        "^FT317,191^A0I,39,38^FH\\^FD"+text+" ^FS\n" +
+                        "^FT317,143^A0I,39,38^FH\\^FD          sample print^FS\n" +
+                        "^PQ1,0,1,Y^XZ");
+//                printer.sendCommand(printCode2);
                 printCallback.onSuccess();
             }
             catch (Exception e){
