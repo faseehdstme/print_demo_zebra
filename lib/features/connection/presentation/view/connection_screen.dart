@@ -67,87 +67,89 @@ class _ConnectionScreenState extends State<ConnectionScreen> {
                 bodyStyle: Theme.of(context).textTheme.bodyMedium!,
                 textSize: 17,
               ),
-              BlocConsumer<ConnectionBloc, ConnectionBlocState>(
-                  builder: (context, connectionState) {
-                if (connectionState is ConnectionLoaded) {
-                  return connectionState.printers.isEmpty
-                      ? Center(
-                          child: AppText(
-                            bodyText: "Printers Not Found",
-                            bodyStyle: Theme.of(context).textTheme.bodyMedium!,
-                            maxLines: 3,
-                            textSize: 17,
-                          ),
-                        )
-                      : ListView.separated(
-                          scrollDirection: Axis.vertical,
-                          itemCount: connectionState.printers.length,
-                          shrinkWrap: true,
-                          itemBuilder: (context, index) {
-                            return ListTile(
-                                onTap: () async {
-                                  context.read<ConnectionBloc>().add(
-                                      ConnectPrinter(
-                                          connectionState.printers[index]));
-                                },
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(15)),
-                                tileColor: ColorPellete.lightMatGreen,
-                                leading: const Icon(Icons.ads_click),
-                                title: AppText(
-                                  bodyText: connectionState.printers[index],
-                                  bodyStyle:
-                                      Theme.of(context).textTheme.bodyMedium!,
-                                  textSize: 15,
-                                ));
-                          },
-                          separatorBuilder: (BuildContext context, int index) {
-                            return const SizedBox(
-                              height: 10,
-                            );
-                          },
-                        );
-                } else if (connectionState is ConnectionError) {
-                  return Center(
-                    child: AppText(
-                      bodyText: connectionState.message,
-                      bodyStyle: Theme.of(context).textTheme.bodyMedium!,
-                      maxLines: 3,
-                      textSize: 19,
-                    ),
-                  );
-                } else if (connectionState is ConnectionInitial) {
-                  return Center(
-                    child: MessageBox(asset: AppConstants.printerInit, message: "Initiate Printer connection"),
-                  );
-                } else if (connectionState is NfcConnectionInitial) {
-                  return Center(
-                    child: MessageBox(
-                        asset: AppConstants.nfcImage,
-                        message: "Please tap NFC Tag "),
-                  );
-                } else {
-                  return Center(child: Loader());
-                }
-              }, listener: (context, state) {
-                if (state is PrinterConnectionLoaded) {
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => PrinterScreen(
-                                macId: state.connectedPrinter,
-                              )));
-                  Future.delayed(Duration(seconds: 3),(){
-                    context.read<ConnectionBloc>().add(GetInitialState());
-                  });
-                } else if (state is PrinterConnectionError) {
-                  showAppSnackBar(context, state.message);
-                  context.read<ConnectionBloc>().add(GetLoadedState());
-                } else if (state is NfcConnectionError) {
-                  showAppSnackBar(context, state.message);
-                  context.read<ConnectionBloc>().add(GetLoadedState());
-                }
-              }),
+              Expanded(
+                child: BlocConsumer<ConnectionBloc, ConnectionBlocState>(
+                    builder: (context, connectionState) {
+                  if (connectionState is ConnectionLoaded) {
+                    return connectionState.printers.isEmpty
+                        ? Center(
+                            child: AppText(
+                              bodyText: "Printers Not Found",
+                              bodyStyle: Theme.of(context).textTheme.bodyMedium!,
+                              maxLines: 3,
+                              textSize: 17,
+                            ),
+                          )
+                        : ListView.separated(
+                            scrollDirection: Axis.vertical,
+                            itemCount: connectionState.printers.length,
+                            shrinkWrap: true,
+                            itemBuilder: (context, index) {
+                              return ListTile(
+                                  onTap: () async {
+                                    context.read<ConnectionBloc>().add(
+                                        ConnectPrinter(
+                                            connectionState.printers[index]));
+                                  },
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(15)),
+                                  tileColor: ColorPellete.lightMatGreen,
+                                  leading: const Icon(Icons.ads_click),
+                                  title: AppText(
+                                    bodyText: connectionState.printers[index],
+                                    bodyStyle:
+                                        Theme.of(context).textTheme.bodyMedium!,
+                                    textSize: 15,
+                                  ));
+                            },
+                            separatorBuilder: (BuildContext context, int index) {
+                              return const SizedBox(
+                                height: 10,
+                              );
+                            },
+                          );
+                  } else if (connectionState is ConnectionError) {
+                    return Center(
+                      child: AppText(
+                        bodyText: connectionState.message,
+                        bodyStyle: Theme.of(context).textTheme.bodyMedium!,
+                        maxLines: 3,
+                        textSize: 19,
+                      ),
+                    );
+                  } else if (connectionState is ConnectionInitial) {
+                    return Center(
+                      child: MessageBox(asset: AppConstants.printerInit, message: "Initiate Printer connection"),
+                    );
+                  } else if (connectionState is NfcConnectionInitial) {
+                    return Center(
+                      child: MessageBox(
+                          asset: AppConstants.nfcImage,
+                          message: "Please tap NFC Tag "),
+                    );
+                  } else {
+                    return Center(child: Loader());
+                  }
+                }, listener: (context, state) {
+                  if (state is PrinterConnectionLoaded) {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => PrinterScreen(
+                                  macId: state.connectedPrinter,
+                                )));
+                    Future.delayed(Duration(seconds: 3),(){
+                      context.read<ConnectionBloc>().add(GetInitialState());
+                    });
+                  } else if (state is PrinterConnectionError) {
+                    showAppSnackBar(context, state.message);
+                    context.read<ConnectionBloc>().add(GetLoadedState());
+                  } else if (state is NfcConnectionError) {
+                    showAppSnackBar(context, state.message);
+                    context.read<ConnectionBloc>().add(GetLoadedState());
+                  }
+                }),
+              ),
             ],
           ),
         ),
