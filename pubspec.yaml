@@ -43,6 +43,9 @@ dependencies:
   path_provider:
   qr_flutter:
   image:
+  http:
+  nfc_manager:
+
 
 dev_dependencies:
   flutter_test:

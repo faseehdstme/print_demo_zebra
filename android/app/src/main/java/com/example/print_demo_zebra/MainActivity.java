@@ -69,6 +69,7 @@ public class MainActivity extends FlutterActivity implements DiscoveryHandler {
             }
         }
     };
+
     @Override
     public void configureFlutterEngine(@NonNull FlutterEngine flutterEngine) {
         super.configureFlutterEngine(flutterEngine);
@@ -205,8 +206,13 @@ public class MainActivity extends FlutterActivity implements DiscoveryHandler {
                 if (!(connection.isConnected())){
                     throw new Exception("Printer not connected");
                 }
+
                 ZebraImageAndroid zebraImage = new ZebraImageAndroid(bitmapValue);
                 ZebraPrinter printer = ZebraPrinterFactory.getInstance(PrinterLanguage.ZPL, connection);
+                printer.sendCommand("^XA\n" +
+                        "^PW203\n" +
+                        "^LL203\n" +
+                        "^XZ");
                 printer.printImage(zebraImage, 0, 0, bitmapValue.getWidth(), bitmapValue.getHeight(), false);
                 printCallback.onSuccess();
             }
@@ -215,7 +221,8 @@ public class MainActivity extends FlutterActivity implements DiscoveryHandler {
             }
         }
         ).start();
-    }
+    }                      
+
 
     void configurePrinter(double width,double height,PrintCallback printCallback){
         int labelWidthDots = (int) (width*203);  // 4 inches

@@ -111,7 +111,7 @@ public class QrCodeGenerator {
         }
 
         // Scale logo to appropriate size (20% of QR code size)
-        int logoSize = qrCodeBitmap.getWidth() / 5;
+        int logoSize = qrCodeBitmap.getWidth() / 4;
         logoBitmap = Bitmap.createScaledBitmap(logoBitmap, logoSize, logoSize, true);
 
         // Create a copy of the QR code bitmap

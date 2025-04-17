@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:print_demo_zebra/core/color_pellete/app_pellette.dart';
+import 'package:print_demo_zebra/core/constants/app_constants.dart';
+import 'package:print_demo_zebra/core/utils/message_box.dart';
 import 'package:print_demo_zebra/core/utils/widgets/show_snack.dart';
 import 'package:print_demo_zebra/features/connection/presentation/bloc/connection_bloc.dart';
 
@@ -31,13 +33,20 @@ class _ConnectionScreenState extends State<ConnectionScreen> {
         title: const Text('Bluetooth Connections'),
         actions: [
           IconButton(
-            icon: Icon(Icons.ac_unit),
+            icon: Icon(Icons.bluetooth_audio_sharp),
             onPressed: () {
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 context.read<ConnectionBloc>().add(GetBluetoothPrinters());
               });
             },
-          )
+          ),
+          IconButton(
+              onPressed: () {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  context.read<ConnectionBloc>().add(GetNfcPrinter());
+                });
+              },
+              icon: Icon(Icons.nfc_outlined))
         ],
       ),
       body: Container(
@@ -109,12 +118,13 @@ class _ConnectionScreenState extends State<ConnectionScreen> {
                   );
                 } else if (connectionState is ConnectionInitial) {
                   return Center(
-                    child: AppText(
-                      bodyText: "Printers Fetching...",
-                      bodyStyle: Theme.of(context).textTheme.bodyMedium!,
-                      maxLines: 3,
-                      textSize: 19,
-                    ),
+                    child: MessageBox(asset: AppConstants.printerInit, message: "Initiate Printer connection"),
+                  );
+                } else if (connectionState is NfcConnectionInitial) {
+                  return Center(
+                    child: MessageBox(
+                        asset: AppConstants.nfcImage,
+                        message: "Please tap NFC Tag "),
                   );
                 } else {
                   return Center(child: Loader());
@@ -127,9 +137,13 @@ class _ConnectionScreenState extends State<ConnectionScreen> {
                           builder: (context) => PrinterScreen(
                                 macId: state.connectedPrinter,
                               )));
-                  // showAppSnackBar(context, 'Printed successfully');
-                  // context.read<ConnectionBloc>().add(GetLoadedState());
+                  Future.delayed(Duration(seconds: 3),(){
+                    context.read<ConnectionBloc>().add(GetInitialState());
+                  });
                 } else if (state is PrinterConnectionError) {
+                  showAppSnackBar(context, state.message);
+                  context.read<ConnectionBloc>().add(GetLoadedState());
+                } else if (state is NfcConnectionError) {
                   showAppSnackBar(context, state.message);
                   context.read<ConnectionBloc>().add(GetLoadedState());
                 }

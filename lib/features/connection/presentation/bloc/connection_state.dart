@@ -24,3 +24,9 @@ class PrinterConnectionError extends ConnectionBlocState {
   PrinterConnectionError(this.message);
 }
 
+class NfcConnectionInitial extends ConnectionBlocState{}
+class NfcConnectionError extends ConnectionBlocState{
+  final String message;
+  NfcConnectionError({required this.message});
+}
+
