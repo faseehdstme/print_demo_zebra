@@ -4,12 +4,20 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.content.BroadcastReceiver;
+import android.content.ContentUris;
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.pdf.PdfRenderer;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Looper;
+import android.os.ParcelFileDescriptor;
+import android.provider.DocumentsContract;
+import android.provider.MediaStore;
+import android.provider.OpenableColumns;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -19,12 +27,17 @@ import com.zebra.sdk.comm.Connection;
 import com.zebra.sdk.comm.ConnectionException;
 import com.zebra.sdk.graphics.internal.ZebraImageAndroid;
 import com.zebra.sdk.printer.PrinterLanguage;
+import com.zebra.sdk.printer.PrinterStatus;
+import com.zebra.sdk.printer.SGD;
 import com.zebra.sdk.printer.ZebraPrinter;
 import com.zebra.sdk.printer.ZebraPrinterFactory;
+import com.zebra.sdk.printer.ZebraPrinterLanguageUnknownException;
 import com.zebra.sdk.printer.discovery.BluetoothDiscoverer;
 import com.zebra.sdk.printer.discovery.DiscoveredPrinter;
 import com.zebra.sdk.printer.discovery.DiscoveryHandler;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -39,6 +52,7 @@ public class MainActivity extends FlutterActivity implements DiscoveryHandler {
     private BluetoothAdapter bluetoothAdapter;
     private BluetoothSocket bluetoothSocket;
     private Connection connection;
+    int pdfWidth;
     private List<String> macAddresses = new ArrayList<String>();
     private ArrayList<DiscoveredPrinter> printerItems;
     private ArrayList<Map<String,String>> printerSettings;
@@ -104,20 +118,6 @@ public class MainActivity extends FlutterActivity implements DiscoveryHandler {
                             }
                         });
                     }
-                    else if(call.method.equals("printImage")){
-                        byte[] imageByte = call.argument("imageByte");
-                        this.printImage(imageByte,new PrintCallback() {
-                            @Override
-                            public void onSuccess() {
-                                result.success("success");
-                            }
-
-                            @Override
-                            public void onError(Exception e) {
-                                result.error("PRINT",e.getMessage(),null);
-                            }
-                        });
-                    }
                     else if(call.method.equals("printQrImage")){
                         String qrCode = call.argument("qrCode");
                         this.generateQrCode(qrCode,new PrintCallback() {
@@ -145,6 +145,24 @@ public class MainActivity extends FlutterActivity implements DiscoveryHandler {
                                 result.error("PRINT",e.getMessage(),null);
                             }
                         });
+                    }
+                    else if(call.method.equals("pdfPrint")){
+
+                        String uriPath = call.argument("fileUri");
+                        Uri finalUri = Uri.parse(uriPath);
+                        try {
+                            String fileName = getPDFName(finalUri);
+                            String filePath = getPDFPath(finalUri);
+                            if (filePath != null){
+                                sendPrint(filePath);
+                            }
+                            else {
+                                throw new RuntimeException("File not found");
+                            }
+                        }
+                        catch (Exception e){
+                            result.error("PrintPDF",e.getMessage(),null);
+                        }
                     }
                     else if (call.method.equals("disConnect")){
                         disConnect(new PrintCallback() {
@@ -206,13 +224,15 @@ public class MainActivity extends FlutterActivity implements DiscoveryHandler {
                 if (!(connection.isConnected())){
                     throw new Exception("Printer not connected");
                 }
-
+                String printerModel = SGD.GET("device.host_identification",connection).substring(0,5);
+                Log.e("printer",printerModel);
                 ZebraImageAndroid zebraImage = new ZebraImageAndroid(bitmapValue);
                 ZebraPrinter printer = ZebraPrinterFactory.getInstance(PrinterLanguage.ZPL, connection);
                 printer.sendCommand("^XA\n" +
                         "^PW203\n" +
                         "^LL203\n" +
                         "^XZ");
+
                 printer.printImage(zebraImage, 0, 0, bitmapValue.getWidth(), bitmapValue.getHeight(), false);
                 printCallback.onSuccess();
             }
@@ -223,27 +243,6 @@ public class MainActivity extends FlutterActivity implements DiscoveryHandler {
         ).start();
     }                      
 
-
-    void configurePrinter(double width,double height,PrintCallback printCallback){
-        int labelWidthDots = (int) (width*203);  // 4 inches
-        int labelLengthDots = (int)(height*203); //2 inches
-        String setWidth = "! U1 setvar \"media.width\" \"" + labelWidthDots + "\"\n";
-        String setLength = "! U1 setvar \"ezpl.media_length\" \"" + labelLengthDots + "\"\n";
-        new Thread(()->{
-            Looper.prepare();
-            try{
-                if (!(connection.isConnected())){
-                    throw new Exception("Printer not connected");
-                }
-                ZebraPrinter printer = ZebraPrinterFactory.getInstance(PrinterLanguage.ZPL, connection);
-                connection.write(setWidth.getBytes());
-                printCallback.onSuccess();
-            }
-            catch(Exception e){
-                printCallback.onError(e);
-            }
-        });
-    }
     void print(String text,PrintCallback printCallback){
         new Thread(()->{
             Looper.prepare();
@@ -392,5 +391,225 @@ public class MainActivity extends FlutterActivity implements DiscoveryHandler {
     public interface PrintCallback {
         void onSuccess();
         void onError(Exception e);
+    }
+
+    //PDF print
+    private boolean isPDFEnabled(Connection connection) {
+        try {
+            String printerInfo = SGD.GET("apl.enable", connection);
+            if (printerInfo.equals("pdf")) {
+                return true;
+            }
+        } catch (ConnectionException e) {
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+
+    public String getPDFName(Uri fileUri) {
+        String fileString = fileUri.toString();
+        File myFile = new File(fileString);
+        String fileName = null;
+
+        /*if (fileString.startsWith("content://")) {
+            Cursor cursor = null;
+            try {
+                cursor = getActivity().getContentResolver().query(fileUri, null, null, null, null);
+                if (cursor != null && cursor.moveToFirst()) {
+                    fileName = cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME));
+                }
+            } finally {
+                cursor.close();
+            }
+        } else */if (fileString.startsWith("file://")) {
+            fileName = myFile.getName();
+        }
+        return fileName;
+    }
+
+    // Uses the Uri to obtain the path to the file.
+    public String getPDFPath(Uri fileUri) {
+        if ("file".equalsIgnoreCase(fileUri.getScheme())) {
+            return fileUri.getPath();
+        }
+        String selection = null;
+        String[] selectionArgs = null;
+
+        final String id = DocumentsContract.getDocumentId(fileUri);
+        try {
+            if (id.length() < 15) {
+                fileUri = ContentUris.withAppendedId(Uri.parse("content://downloads/public_downloads"), Long.valueOf(id));
+            } else if (id.substring(0,7).equals("primary")) {
+                String endPath = id.substring(8);
+                String fullPath = "/sdcard/" + endPath;
+                return fullPath;
+            } else if (!id.substring(0,1).equals("/")) {
+                boolean pathStarted = false;
+                String path = "/sdcard/";
+
+                for (char c : id.toCharArray()) {
+                    if (pathStarted) {
+                        path = path + c;
+                    }
+                    if (c == ':') {
+                        pathStarted = true;
+                    }
+                }
+                return path;
+            } else {
+                return id;
+            }
+        } catch (NumberFormatException e) {
+            Log.e("Exc",e.getMessage(),null);
+            e.printStackTrace();
+//            String snackbarmsg = mainActivity.getString(R.string.wrong_firmware);
+//            mainActivity.showSnackbar(snackbarmsg);
+        }
+
+        if ("content".equalsIgnoreCase(fileUri.getScheme())) {
+            String[] projection = {
+                    MediaStore.Files.FileColumns.DATA
+            };
+            Cursor cursor = null;
+            try {
+                cursor = getApplicationContext().getContentResolver()
+                        .query(fileUri, projection, selection, selectionArgs, null);
+                int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+                if (cursor.moveToFirst()) {
+                    return cursor.getString(column_index);
+                }
+            } catch (Exception e) {
+            }
+        } else if ("file".equalsIgnoreCase(fileUri.getScheme())) {
+            return fileUri.getPath();
+        }
+        return null;
+    }
+
+    // Returns the width of the page in inches for scaling later
+    // PdfRenderer is only available for devices running Android Lollipop or newer
+    private Integer getPageWidth( Uri fileUri) throws IOException {
+        final ParcelFileDescriptor pfdPdf = getApplicationContext().getContentResolver().openFileDescriptor(
+                fileUri, "r");
+
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+            PdfRenderer pdf = new PdfRenderer(pfdPdf);
+            PdfRenderer.Page page = pdf.openPage(0);
+            int pixWidth = page.getWidth();
+            int inWidth = pixWidth / 72;
+            pdfWidth = inWidth;
+            return inWidth;
+        }
+        else {
+            pdfWidth=0;
+        }
+
+        return null;
+    }
+
+    private Boolean checkPrinterStatus(ZebraPrinter printer,String filePath) {
+        try {
+            PrinterStatus printerStatus = printer.getCurrentStatus();
+            if (printerStatus.isReadyToPrint && filePath != null) {
+                return true;
+            }
+        } catch (ConnectionException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    //If there is an issue with the printer, this IDs the most common issues and tells the user
+    private void showPrinterStatus(ZebraPrinter printer) {
+        String snackbarMsg = "";
+        try {
+            PrinterStatus printerStatus = printer.getCurrentStatus();
+            if (printerStatus.isReadyToPrint) {
+//                snackbarMsg = mainActivity.getString(R.string.ready_to_print);
+            } else if (printerStatus.isPaused) {
+//                snackbarMsg = mainActivity.getString(R.string.print_failed) + " " + mainActivity.getString(R.string.printer_paused);
+            } else if (printerStatus.isHeadOpen) {
+//                snackbarMsg = mainActivity.getString(R.string.print_failed) + " " + mainActivity.getString(R.string.head_open);
+            } else if (printerStatus.isPaperOut) {
+//                snackbarMsg = mainActivity.getString(R.string.print_failed) + " " + mainActivity.getString(R.string.paper_out);
+            } else {
+//                snackbarMsg = mainActivity.getString(R.string.print_failed) + " " + mainActivity.getString(R.string.cannot_print);
+            }
+
+//            mainActivity.showSnackbar(snackbarMsg);
+
+        } catch (ConnectionException e) {
+            e.printStackTrace();
+//            snackbarMsg = mainActivity.getString(R.string.print_failed) + " " + mainActivity.getString(R.string.no_printer);
+//            mainActivity.showSnackbar(snackbarMsg);
+        }
+    }
+
+    // Sets the scaling on the printer and then sends the pdf file to the printer
+    private void sendPrint(String filePath) {
+        String snackbarMsg = "";
+        new Thread(()->{
+            Looper.prepare();
+        try {
+            if (!(connection.isConnected())){
+                throw new RuntimeException("Printer not connected");
+            }
+            ZebraPrinter printerValue = ZebraPrinterFactory.getInstance(connection);
+
+            boolean isReady = checkPrinterStatus(printerValue,filePath);
+            String scale = scalePrint(connection);
+
+            SGD.SET("apl.settings",scale,connection);
+
+            if (isReady) {
+                if (filePath != null) {
+                    printerValue.sendFileContents(filePath);
+                } else {
+                    throw new RuntimeException("Printer not ready");
+//                    snackbarMsg = this.getString(R.string.print_failed) + " " + mainActivity.getString(R.string.no_pdf_selected);
+//                    mainActivity.showSnackbar(snackbarMsg);
+                }
+            } else {
+                showPrinterStatus(printerValue);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+//            snackbarMsg = mainActivity.getString(R.string.print_failed) + " " + mainActivity.getString(R.string.no_printer);
+//            mainActivity.showSnackbar(snackbarMsg);
+        }
+        }
+        ).start();
+    }
+
+    // Takes the size of the pdf and the printer's maximum size and scales the file down
+    private String scalePrint (Connection connection) throws ConnectionException{
+        int fileWidth =pdfWidth ;
+        String scale = "dither scale-to-fit";
+
+        if (fileWidth != 0) {
+            String printerModel = SGD.GET("device.host_identification",connection).substring(0,5);
+            double scaleFactor;
+
+            if (printerModel.equals("iMZ22")||printerModel.equals("QLn22")||printerModel.equals("ZD410")) {
+                scaleFactor = 2.0/fileWidth*100;
+            } else if (printerModel.equals("iMZ32")||printerModel.equals("QLn32")||printerModel.equals("ZQ510")) {
+                scaleFactor = 3.0/fileWidth*100;
+            } else if (printerModel.equals("QLn42")||printerModel.equals("ZQ521")||
+                    printerModel.equals("ZD420")||printerModel.equals("ZD500")||
+                    printerModel.equals("ZT220")||printerModel.equals("ZT230")||
+                    printerModel.equals("ZT410")) {
+                scaleFactor = 4.0/fileWidth*100;
+            } else if (printerModel.equals("ZT420")) {
+                scaleFactor = 6.5/fileWidth*100;
+            } else {
+                scaleFactor = 100;
+            }
+
+            scale = "dither scale=" + (int) scaleFactor + "x" + (int) scaleFactor;
+        }
+
+        return scale;
     }
 }

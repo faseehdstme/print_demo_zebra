@@ -54,7 +54,7 @@ class ConnectionBloc extends Bloc<ConnectionEvent, ConnectionBlocState> {
   String extractMacFromZebraNfcPayload(List<int> payload) {
     final url = String.fromCharCodes(payload.sublist(1));
     final uri = Uri.parse("http://$url");
-
+    print(uri);
     final rawMac = uri.queryParameters['mB'];
     if (rawMac == null || rawMac.length != 12) return "MAC not found";
     return formatMac(rawMac);
@@ -68,4 +68,5 @@ class ConnectionBloc extends Bloc<ConnectionEvent, ConnectionBlocState> {
     }
     return buffer.toString().toUpperCase();
   }
+
 }

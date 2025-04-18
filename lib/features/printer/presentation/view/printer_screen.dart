@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:print_demo_zebra/core/server_exception/server_exception.dart';
 import 'package:print_demo_zebra/core/utils/widgets/app_text_form_field.dart';
 import 'package:print_demo_zebra/features/printer/presentation/bloc/printersend_bloc.dart';
+import 'package:print_demo_zebra/features/select_pdf_screen.dart';
 import 'package:print_demo_zebra/init_dependencies.dart';
 
 import '../../../../core/utils/widgets/loader.dart';
@@ -65,6 +66,11 @@ class _PrinterScreenState extends State<PrinterScreen> {
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Printer'),
+          actions: [
+            IconButton(icon: Icon(Icons.picture_as_pdf),onPressed: (){
+              Navigator.push(context, MaterialPageRoute(builder: (context)=>PDFPickerPage()));
+            },)
+          ],
         ),
         body: Padding(
           padding: const EdgeInsets.all(15.0),

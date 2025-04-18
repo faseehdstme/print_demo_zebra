@@ -1,14 +1,10 @@
 import 'package:get_it/get_it.dart';
-import 'package:print_demo_zebra/core/constants/app_constants.dart';
 import 'package:print_demo_zebra/features/connection/data/data_source/zebra_printer.dart';
 import 'package:print_demo_zebra/features/connection/data/repo_impl/connection_repo_impl.dart';
 import 'package:print_demo_zebra/features/connection/domain/repository/connection_repository.dart';
 import 'package:print_demo_zebra/features/connection/domain/usecase/connect_printer_usecase.dart';
 import 'package:print_demo_zebra/features/connection/domain/usecase/connection_usecase.dart';
 import 'package:print_demo_zebra/features/connection/presentation/bloc/connection_bloc.dart';
-import 'package:sqflite/sqflite.dart';
-import 'package:path/path.dart';
-
 import 'features/printer/data/datasource/printer_discovery.dart';
 import 'features/printer/data/repo_impl/printer_send_repo_impl.dart';
 import 'features/printer/domain/repository/printer_send_repository.dart';

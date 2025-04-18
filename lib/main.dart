@@ -5,7 +5,6 @@ import 'package:print_demo_zebra/config/theme.dart';
 import 'package:print_demo_zebra/core/constants/app_constants.dart';
 import 'package:print_demo_zebra/core/utils/permission_hanlder.dart';
 import 'package:print_demo_zebra/features/connection/presentation/view/connection_screen.dart';
-import 'package:print_demo_zebra/features/qr_code_page.dart';
 import 'core/bloc/bloc_provider.dart';
 import 'init_dependencies.dart';
 
