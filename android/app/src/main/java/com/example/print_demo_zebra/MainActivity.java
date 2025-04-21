@@ -561,9 +561,12 @@ public class MainActivity extends FlutterActivity implements DiscoveryHandler {
             String scale = scalePrint(connection);
 
             SGD.SET("apl.settings",scale,connection);
-
             if (isReady) {
                 if (filePath != null) {
+                    printerValue.sendCommand("^XA\n" +
+                            "^PW406\n" +
+//                            "^LL406\n" +
+                            "^XZ");
                     printerValue.sendFileContents(filePath);
                 } else {
                     throw new RuntimeException("Printer not ready");
@@ -591,7 +594,7 @@ public class MainActivity extends FlutterActivity implements DiscoveryHandler {
         if (fileWidth != 0) {
             String printerModel = SGD.GET("device.host_identification",connection).substring(0,5);
             double scaleFactor;
-
+            Log.e("PrintModel",printerModel);
             if (printerModel.equals("iMZ22")||printerModel.equals("QLn22")||printerModel.equals("ZD410")) {
                 scaleFactor = 2.0/fileWidth*100;
             } else if (printerModel.equals("iMZ32")||printerModel.equals("QLn32")||printerModel.equals("ZQ510")) {
@@ -601,13 +604,16 @@ public class MainActivity extends FlutterActivity implements DiscoveryHandler {
                     printerModel.equals("ZT220")||printerModel.equals("ZT230")||
                     printerModel.equals("ZT410")) {
                 scaleFactor = 4.0/fileWidth*100;
+                Log.e("scale",String.valueOf(scaleFactor));
+
             } else if (printerModel.equals("ZT420")) {
                 scaleFactor = 6.5/fileWidth*100;
             } else {
                 scaleFactor = 100;
             }
-
+//            scaleFactor = 400;
             scale = "dither scale=" + (int) scaleFactor + "x" + (int) scaleFactor;
+            Log.e("scale",scale);
         }
 
         return scale;
