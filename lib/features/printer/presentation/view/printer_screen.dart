@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:print_demo_zebra/config/route/app_route.dart';
 import 'package:print_demo_zebra/core/server_exception/server_exception.dart';
 import 'package:print_demo_zebra/core/utils/widgets/app_text_form_field.dart';
 import 'package:print_demo_zebra/features/printer/presentation/bloc/printersend_bloc.dart';
@@ -68,7 +69,7 @@ class _PrinterScreenState extends State<PrinterScreen> {
           title: const Text('Printer'),
           actions: [
             IconButton(icon: Icon(Icons.picture_as_pdf),onPressed: (){
-              Navigator.push(context, MaterialPageRoute(builder: (context)=>PDFPickerPage()));
+              Navigator.pushNamed(context, AppRoute.pdfPrint);
             },)
           ],
         ),

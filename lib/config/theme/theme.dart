@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../core/color_pellete/app_pellette.dart';
+import '../../core/color_pellete/app_pellette.dart';
 
 class AppTheme {
   //lightTheme

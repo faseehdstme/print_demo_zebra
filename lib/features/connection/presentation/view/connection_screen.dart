@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:print_demo_zebra/config/route/app_route.dart';
 import 'package:print_demo_zebra/core/color_pellete/app_pellette.dart';
 import 'package:print_demo_zebra/core/constants/app_constants.dart';
 import 'package:print_demo_zebra/core/utils/message_box.dart';
@@ -132,12 +133,10 @@ class _ConnectionScreenState extends State<ConnectionScreen> {
                   }
                 }, listener: (context, state) {
                   if (state is PrinterConnectionLoaded) {
-                    Navigator.push(
+                    Navigator.pushNamed(
                         context,
-                        MaterialPageRoute(
-                            builder: (context) => PrinterScreen(
-                                  macId: state.connectedPrinter,
-                                )));
+                        AppRoute.print,
+                    arguments: state.connectedPrinter);
                     Future.delayed(Duration(seconds: 3),(){
                       context.read<ConnectionBloc>().add(GetInitialState());
                     });
